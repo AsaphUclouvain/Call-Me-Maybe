@@ -65,4 +65,29 @@ function definition is inserted in the prompt as text
          [Fichier JSON Final]
 
 À chaque tour de boucle, le prochain_token_id choisi à l'étape 4 est ajouté (append) à la liste final_prompt_ids.
+
+FORMAT_RESPONSE = {"name": "...", "parameters": {...}}
+Nous allons ensuite inserer le prompt nous meme
+
+On va appliquer le masque differemment entre les etapes en fonction
+d'ou on en est dans le schema. 
+
+recherche des candidats pour EXPECT_FUNCTION_NAME:
+
+candidats_restants = [tous les noms de functions_definition.json]
+matched_so_far = ""
+
+prendre le meilleurs token directement revient a s'en remettre au model ce qui est interdit
+
+tant que len(candidats_restants) > 1 (ou état pas encore terminal):
+    1. logits = sdk.get_logits_from_input_ids(current_ids)
+    2. tokens_valides = { id : token_str
+                           pour chaque id du vocab
+                           si un candidat de candidats_restants
+                           commence par (matched_so_far + token_str) }
+    3. meilleur_id = argmax(logits[id] pour id dans tokens_valides)   ← "meilleur score" ICI, à CE tour
+    4. matched_so_far += id_to_token[meilleur_id]
+    5. current_ids.append(meilleur_id)
+    6. candidats_restants = [c pour c dans candidats_restants si c.startswith(matched_so_far)]
+
 """

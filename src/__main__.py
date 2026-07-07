@@ -4,7 +4,6 @@ from json import loads, JSONDecodeError
 
 FORMAT_RESPONSE ="""
 {
-    "prompt": "[prompt]",
     "name": "[function_name]",
     "parameters": [parameters]
 }
