@@ -56,9 +56,6 @@ class Small_LLM_Model:
         self._tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
             model_name, trust_remote_code=trust_remote_code
         )
-        if self._tokenizer.pad_token_id is None:
-            # ensure we have a pad token to keep batch helpers happy
-            self._tokenizer.pad_token_id = self._tokenizer.eos_token_id
 
         self._model: PreTrainedModel = AutoModelForCausalLM.from_pretrained(
             model_name,
