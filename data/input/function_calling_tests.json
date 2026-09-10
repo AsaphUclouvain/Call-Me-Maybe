@@ -1,12 +1,15 @@
 [
   {
+    "prompt": "Greet shrek"
+  },
+  {
+    "prompt": "Greet shrek and john"
+  },
+  {
     "prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'"
   },
   {
     "prompt": "What is the sum of 265 and 345?"
-  },
-  {
-    "prompt": "Greet shrek"
   },
   {
     "prompt": "What is the sum of 2 and 3?"

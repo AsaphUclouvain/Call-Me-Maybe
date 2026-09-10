@@ -1,7 +1,7 @@
 import json
-import config
-from json_handler import read_json
-from schema import FunctionDef, UserInput
+from . import config
+from .json_handler import read_json
+from .schema import FunctionDef, UserInput
 from pydantic import ValidationError
 
 _func_def_content: str | None = None
@@ -13,9 +13,9 @@ def get_func_hash() -> str:
     global _func_hash
 
     if _func_hash < 10:
-        h = f"000{_func_hash}"
+        h = f"0{_func_hash}"
     elif _func_hash < 100:
-        h = f"00{_func_hash}"
+        h = f"{_func_hash}"
     else:
         raise ValueError("Hash above maximum value.")
     _func_hash += 1
@@ -41,7 +41,7 @@ def load_func_def() -> None:
         if not isinstance(raw_funcs, list):
             raise ValueError(f"le fichier {config.FUNC_DEF_FILE} doit contenir une liste JSON.")
         for f in raw_funcs:
-            f["name"] = get_func_hash() + f["name"]
+            f["name"] = get_func_hash() + f["name"]            
         _func_def_content = json.dumps(raw_funcs)
         _func_defs = [FunctionDef(**f) for f in raw_funcs]
     except (ValidationError, ValueError) as e:

@@ -1,10 +1,10 @@
 from collections import defaultdict
 import json
 import sys
-from llm import get_llm, get_id_to_token, get_token_to_id, get_base_ids, string_to_token_ids
-from files_content import get_func_defs, get_user_inputs
-from automaton import get_str_automaton, get_boolean_automaton, get_number_automaton
-from schema import FunctionDef, VarMetaData, UserInput
+from .llm import get_llm, get_id_to_token, get_token_to_id, get_base_ids, string_to_token_ids
+from .files_content import get_func_defs, get_user_inputs
+from .automaton import get_str_automaton, get_boolean_automaton, get_number_automaton
+from .schema import FunctionDef, VarMetaData, UserInput
 import numpy as np
 
 class LLMResponse:
@@ -124,7 +124,7 @@ class LLMResponse:
             logits_np = np.array(logits, dtype=np.float32)
             best_idx_in_valid = int(np.argmax(logits_np[valid_ids]))
             max_idx = valid_ids[best_idx_in_valid]
-            self.extend_ids([max_idx])
+            self.ids.append(max_idx) # We don't print the hash prefix
             best_tok = get_id_to_token()[max_idx]
             candidates = list(filter(filter_func, candidates))
             idx += len(best_tok)

@@ -1,13 +1,12 @@
 from llm_sdk import Small_LLM_Model
-from json_handler import read_json
-from files_content import get_func_def_str
-import config
+from .json_handler import read_json
+from .files_content import get_func_def_str
+from . import config
 
 _llm : Small_LLM_Model | None = None
 _id_to_token: dict[int, str] = {}
 _token_to_id: dict[str, int]  = {}
 _base_ids: list[int] = []
-
 
 def load_llm() -> None:
     global _llm

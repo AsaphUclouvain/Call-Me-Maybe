@@ -1,5 +1,5 @@
 from pathlib import Path
-import config
+from . import config
 import json
 
 def read_json(file_name: str) -> list | dict:

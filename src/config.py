@@ -7,8 +7,8 @@ You are a function calling assistant. Answer the given prompt by selecting
 the correct function from the available tools and generate a valid and schema compliant JSON.
 """
 
-RESPONSE_SCHEMA: Final[str] = """[SCHEMA]
-{"prompt":"what you are asked to do","name":"function_name","parameters":{"parameter1":"value1","parameter2":"value2",...}}
+RESPONSE_SCHEMA: Final[str] = """[EXAMPLE]
+{"prompt":"Reverse the word 'Bonjour'","name":"fn_reverse_string","parameters":{"name":"Bonjour"}}
 """
 
 ROOT_DIR: Path = Path(__file__).resolve().parent.parent
