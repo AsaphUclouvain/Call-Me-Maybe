@@ -1,10 +1,31 @@
 from __future__ import annotations
+
+"""Automata generators used to validate JSON tokens during decoding.
+
+This module builds small deterministic automata for JSON string,
+number and boolean lexical forms that are used by the decoder to
+restrict valid token sequences produced by the model.
+"""
+
 from collections.abc import Callable
 from collections import defaultdict
 from functools import lru_cache
 
+
 @lru_cache
-def get_str_automaton(end_chr: str):
+def get_str_automaton(
+    end_chr: str
+) -> tuple[int, dict[int, dict[int, Callable[[str], bool]]]]:
+    """Return an automaton that validates JSON string content.
+
+    Args:
+        end_chr: The character that terminates the string in the
+            surrounding JSON context (usually '"' or ',').
+
+    Returns:
+        A tuple (final_state_id, automaton) where `automaton` is a
+        mapping of state->(next_state->predicate).
+    """
     automaton: dict[int, dict[int, Callable]] = defaultdict(dict)
     state_id: int = 0
 
@@ -13,7 +34,11 @@ def get_str_automaton(end_chr: str):
 
     def is_unescaped(c: str) -> bool:
         cp = ord(c)
-        return (0x20 <= cp <= 0x21) or (0x23 <= cp <= 0x5B) or (0x5D <= cp <= 0x10FFFF)
+        return (
+            (0x20 <= cp <= 0x21)
+            or (0x23 <= cp <= 0x5B)
+            or (0x5D <= cp <= 0x10FFFF)
+        )
 
     automaton[state_id][state_id] = is_unescaped
     automaton[state_id][state_id + 1] = lambda c: c == '\\'
@@ -26,8 +51,20 @@ def get_str_automaton(end_chr: str):
     automaton[state_id + 5][state_id] = is_hex
     return state_id + 6, automaton
 
+
 @lru_cache
-def get_number_automaton(end_chr: str):
+def get_number_automaton(
+    end_chr: str
+) -> tuple[int, dict[int, dict[int, Callable[[str], bool]]]]:
+    """Return an automaton that validates JSON numeric literals.
+
+    Args:
+        end_chr: The terminal character that ends the numeric literal.
+
+    Returns:
+        A tuple (final_state_id, automaton) suitable for token-level
+        validation.
+    """
     automaton: dict[int, dict[int, Callable]] = defaultdict(dict)
     state_id: int = 0
 
@@ -60,8 +97,19 @@ def get_number_automaton(end_chr: str):
 
     return state_id + 10, automaton
 
+
 @lru_cache
-def get_boolean_automaton(end_chr: str):
+def get_boolean_automaton(
+    end_chr: str
+) -> tuple[int, dict[int, dict[int, Callable[[str], bool]]]]:
+    """Return an automaton that validates JSON boolean literals.
+
+    Args:
+        end_chr: The character that follows the boolean literal.
+
+    Returns:
+        A tuple (final_state_id, automaton) that recognizes `true`/`false`.
+    """
     automaton: dict[int, dict[int, Callable]] = defaultdict(dict)
     state_id: int = 0
 

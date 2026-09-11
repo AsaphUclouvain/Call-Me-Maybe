@@ -11,7 +11,7 @@ lint-strict:
 	mypy src --strict
 
 run:
-	uv run python -m src
+	uv run python -m src --trace
 
 
 debug:

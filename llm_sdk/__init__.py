@@ -1,8 +1,15 @@
+"""Shim package for the external `llm_sdk` dependency.
+
+The real implementation is expected to be provided by a local or
+third-party package. This minimal module exists so the project
+imports cleanly in development environments.
+"""
+
 # ABOUTME: LLM SDK for local model inference using Hugging Face transformers.
 # ABOUTME: Provides Small_LLM_Model class for loading and running causal language models.
 
 import time
-from typing import Tuple
+from typing import Tuple, cast
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizer, PreTrainedModel, logging
@@ -81,7 +88,7 @@ class Small_LLM_Model:
         """Inverse of :py:meth:`encode`. Removes special tokens."""
         if isinstance(ids, torch.Tensor):
             ids = ids.tolist()
-        return self._tokenizer.decode(ids, skip_special_tokens=True)
+        return cast(str, self._tokenizer.decode(ids, skip_special_tokens=True))
 
 
     def get_logits_from_input_ids(self, input_ids: list[int]) -> list[float]:
@@ -102,7 +109,7 @@ class Small_LLM_Model:
             repo_id=self._model_name,
             filename=vocab_file_name
         )
-        return vocab_path
+        return cast(str, vocab_path)
 
 
     def get_path_to_merges_file(self) -> str:
@@ -111,7 +118,7 @@ class Small_LLM_Model:
             repo_id=self._model_name,
             filename=merges_file_name
         )
-        return merges_path
+        return cast(str, merges_path)
 
 
     def get_path_to_tokenizer_file(self) -> str:
@@ -120,4 +127,4 @@ class Small_LLM_Model:
             repo_id=self._model_name,
             filename=tokenizer_file_name
         )
-        return tokenizer_path
+        return cast(str, tokenizer_path)
