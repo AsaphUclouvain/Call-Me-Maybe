@@ -3,15 +3,25 @@
 This module reads JSON files described in `config` and prepares
 Pydantic models used by the decoding pipeline. Cached getters are
 provided to avoid repeated I/O.
+
+Error contract: validation failures raise ``AppError`` without logging;
+only the CLI boundary logs, preserving ``stdout`` and avoiding
+duplicate log entries.
 """
 
 import json
+import logging
 from typing import Optional, cast
+
 from pydantic import ValidationError
+
 from src import config
-from src.utils import add_prefix
+from src.errors import AppError
 from src.json_handler import read_json
 from src.schema import FunctionDef, UserInput
+from src.utils import add_prefix
+
+logger = logging.getLogger("call-me-maybe.files_content")
 
 _func_def_content: Optional[str] = None
 _func_defs: Optional[list[FunctionDef]] = None
@@ -25,19 +35,49 @@ def load_user_input() -> None:
         None
 
     Raises:
-        ValueError: If the file contents are invalid or fail validation.
+        AppError: If the file contents are invalid or fail validation.
     """
     global _user_inputs
     try:
         raw_data = read_json(config.INPUT_FILE)
-        if not isinstance(raw_data, list):
-            raise ValueError(f"le fichier {config.INPUT_FILE} doit \
-contenir une liste JSON.")
-        _user_inputs = [UserInput(**ui) for ui in raw_data]
-    except (ValidationError, ValueError) as e:
-        raise ValueError(
-                f"Invalid pydantic object {config.INPUT_FILE}: {e}"
+    except AppError as e:
+        e.context.setdefault("file", config.INPUT_FILE)
+        if e.code == "INPUT_READ":
+            raise AppError(
+                str(e),
+                code="INPUT_READ",
+                hint=e.hint,
+                context=e.context,
             ) from e
+        raise
+    try:
+        if not isinstance(raw_data, list):
+            raise AppError(
+                f"File {config.INPUT_FILE} must contain a JSON list.",
+                code="INPUT_INVALID",
+                hint="Wrap the prompts in a top-level [...].",
+                context={"path": config.INPUT_FILE},
+            )
+        if not raw_data:
+            raise AppError(
+                f"File {config.INPUT_FILE} contains an empty list.",
+                code="INPUT_INVALID",
+                hint="Add at least one {\"prompt\": ...} entry.",
+                context={"path": config.INPUT_FILE},
+            )
+        _user_inputs = [UserInput(**ui) for ui in raw_data]
+    except (ValidationError, TypeError) as e:
+        raise AppError(
+            f"Invalid user input schema in {config.INPUT_FILE}: {e}",
+            code="INPUT_INVALID",
+            hint="Each entry must match {\"prompt\": str}.",
+            context={"path": config.INPUT_FILE},
+        ) from e
+    logger.info(
+        "Loaded %d user input(s) from %s",
+        len(_user_inputs),
+        config.INPUT_FILE,
+    )
 
 
 def load_func_def() -> None:
@@ -47,23 +87,46 @@ def load_func_def() -> None:
         None
 
     Raises:
-        ValueError: If the function definitions file is invalid or fails
+        AppError: If the function definitions file is invalid or fails
         validation.
     """
     global _func_defs
     global _func_def_content
     try:
         raw_funcs = read_json(config.FUNC_DEF_FILE)
+    except AppError as e:
+        raise AppError(
+            str(e),
+            code="FUNC_DEF_READ",
+            hint=e.hint,
+            context={**e.context, "file": config.FUNC_DEF_FILE},
+        ) from e
+    try:
         if not isinstance(raw_funcs, list):
-            raise ValueError(f"le fichier {config.FUNC_DEF_FILE} doit \
-contenir une liste JSON.")
+            raise AppError(
+                f"File {config.FUNC_DEF_FILE} must contain a JSON list.",
+                code="FUNC_DEF_INVALID",
+                hint="Wrap the function definitions in a top-level [...].",
+                context={"path": config.FUNC_DEF_FILE},
+            )
+        if not raw_funcs:
+            raise AppError(
+                f"File {config.FUNC_DEF_FILE} contains an empty list.",
+                code="FUNC_DEF_INVALID",
+                hint="Define at least one function.",
+                context={"path": config.FUNC_DEF_FILE},
+            )
         add_prefix(raw_funcs)
         _func_def_content = json.dumps(raw_funcs)
         _func_defs = [FunctionDef(**f) for f in raw_funcs]
-    except (ValidationError, ValueError) as e:
-        raise ValueError(
-                f"Invalid pydantic object {config.FUNC_DEF_FILE}: {e}"
-            ) from e
+    except (ValidationError, TypeError) as e:
+        raise AppError(
+            f"Invalid schema in {config.FUNC_DEF_FILE}: {e}",
+            code="FUNC_DEF_INVALID",
+            hint="Each entry needs name/description/parameters/returns.",
+            context={"path": config.FUNC_DEF_FILE},
+        ) from e
+    logger.info("Loaded %d function definition(s)", len(_func_defs))
 
 
 def get_func_def_str() -> str:

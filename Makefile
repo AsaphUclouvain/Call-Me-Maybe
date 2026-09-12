@@ -13,6 +13,11 @@ lint-strict:
 run: install
 	uv run python -m src --trace
 
+test:
+	uv run pytest -q
+
+test-slow:
+	uv run pytest -q -m "slow"
 
 debug:
 	uv run python -m pdb -m src
@@ -26,4 +31,4 @@ clean:
 fclean: clean
 	rm -rf data/output
 
-.PHONY: install run debug clean lint lint-strict
+.PHONY: install run debug clean lint lint-strict test test-slow

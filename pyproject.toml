@@ -24,3 +24,14 @@ packages = ["llm_sdk"]
 
 [[tool.uv.index]]
 url = "https://download.pytorch.org/whl/cpu"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests requiring the real model/network (deselect with '-m \"not slow\"')",
+]
+addopts = "-m 'not slow'"
