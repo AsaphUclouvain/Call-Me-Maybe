@@ -26,7 +26,7 @@ INPUT_FILE: str = "data/input/function_calling_tests.json"
 OUTPUT_FILE: str = "data/output/function_calls.json"
 
 
-FUNC_PREFIX_LENGTH: Final[int] = 0
+FUNC_PREFIX_LENGTH: Final[int] = 2
 
 TRACE: bool = False
 

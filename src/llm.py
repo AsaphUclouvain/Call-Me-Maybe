@@ -26,7 +26,7 @@ def load_llm() -> None:
     global _llm
     if _llm is None:
         _llm = Small_LLM_Model(
-            model_name="Qwen/Qwen3-0.6B",
+            model_name=config.MODEL_NAME,
         )
 
 

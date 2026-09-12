@@ -75,10 +75,14 @@ def main() -> int:
         load_user_input()
         load_func_def()
         load_base_ids()
+
         start_time = time.time()
+
         calls = constraint_decoder()
         remove_prefix(calls)
+
         total = int(time.time() - start_time)
+
         print("Time taken: ", total // 60, "min", total % 60, "s")
         write_json(json.dumps(calls))
         return 0
